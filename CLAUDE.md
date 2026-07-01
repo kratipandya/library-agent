@@ -60,7 +60,7 @@ App Insights (traces) · Key Vault (secrets)
 |---|---|---|
 | Agent framework | **Semantic Kernel, Python** | Azure-native; core learning goal |
 | LLM | **OpenRouter** (OpenAI-compatible API) | Use `:free` model variants by default (e.g. DeepSeek/Llama/Qwen free tiers). I have €7.90 credit — treat it as a buffer, don't burn it on routine dev loops |
-| Embeddings | **Local sentence-transformers** (`all-MiniLM-L6-v2` or `bge-small-en`) | Ingestion is an offline job on my laptop; OpenRouter has no embedding models |
+| Embeddings | **Local sentence-transformers** (`bge-small-en-v1.5`) | Ingestion is an offline job on my laptop; OpenRouter has no embedding models. Chosen over MiniLM for its 512-token limit + better retrieval quality (see DECISIONS.md 002) |
 | Vector store | **FAISS locally → Cosmos DB vector search in cloud** | One `VectorStore` interface, two implementations. Never let FAISS leak into cloud code paths |
 | Database | **Azure Cosmos DB free tier** (1000 RU/s, 25 GB) | Vectors, chat history, metadata cache — one service |
 | Compute | **Azure Functions, consumption plan** (Python) | 1M free executions/month |
@@ -85,8 +85,8 @@ App Insights (traces) · Key Vault (secrets)
 ## Build phases (strict order — everything works locally before Terraform runs)
 
 1. **Local RAG proof** — `ingestion/` script: Gutendex download → clean → chunk
-   (~500–800 tokens, overlap) → embed locally → FAISS index. Query from a plain Python script.
-   No agents, no Azure.
+   (~400 tokens, ~15% overlap — sized to the embedding model's 512-token input limit) →
+   embed locally → FAISS index. Query from a plain Python script. No agents, no Azure.
 2. **Agents locally** — Semantic Kernel + OpenRouter. Content agent first, then Catalog agent,
    then Orchestrator routing. FastAPI or Functions Core Tools for a local HTTP endpoint.
 3. **Terraform** — bootstrap tfstate storage (manual), then modules: resource-group, cosmos,

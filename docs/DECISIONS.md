@@ -22,3 +22,19 @@ Setup decisions made today:
 - **Python 3.12** (pinned in `.python-version`) — matches local pyenv and is GA-supported on
   Azure Functions.
 - **Ruff** for linting/import-sorting with rules E, W, F, I, UP, B at line length 100.
+
+## 002 — Embedding model and chunk size (2026-07-02)
+
+**Chose `bge-small-en-v1.5` with ~400-token chunks and ~60-token (~15%) overlap**, replacing
+CLAUDE.md's original "500–800 tokens" guess.
+
+Why: embedding models silently truncate input past their limit — MiniLM at 256 tokens,
+bge-small at 512. A 700-token chunk embedded by MiniLM would index only its first third;
+the rest becomes unsearchable with no error anywhere. Sizing chunks *to the model*
+(400 + 60 overlap = 460 worst case, under 512) removes that failure mode entirely.
+bge-small-en-v1.5 also outscores MiniLM on retrieval benchmarks (MTEB) at a similar size.
+
+Token counts come from the model's own tokenizer (not word-count approximations), so the
+"fits in the model" guarantee is exact. Chunking is paragraph-aware — split on blank lines,
+pack paragraphs up to the limit, sentence-split only over-long paragraphs — because
+paragraph boundaries are where prose naturally changes topic.
