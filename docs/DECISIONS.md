@@ -38,3 +38,27 @@ Token counts come from the model's own tokenizer (not word-count approximations)
 "fits in the model" guarantee is exact. Chunking is paragraph-aware — split on blank lines,
 pack paragraphs up to the limit, sentence-split only over-long paragraphs — because
 paragraph boundaries are where prose naturally changes topic.
+
+## 003 — Phase 1 complete: local RAG proof (2026-07-02)
+
+Pipeline: Gutendex download (20 books) → boilerplate strip → chunk (7,470 chunks, max
+452 tokens) → embed (bge-small-en-v1.5, 153s on laptop) → FAISS `IndexFlatIP` over
+normalized vectors (exact cosine — no approximate index needed at 7.5k × 384 dims).
+
+**`VectorStore` interface defined now, not in Phase 4.** Two methods (`upsert`, `search`);
+`FaissVectorStore` is the first implementation. Defining the seam while there's only one
+implementation is deliberate: when `CosmosVectorStore` arrives, agent code shouldn't change
+at all — per the "FAISS never leaks into cloud code paths" rule.
+
+**Retrieval quality, observed honestly** (5 test questions across genres):
+
+- Specific questions retrieve the right passages: Gatsby's green-light closing paragraph
+  ranked #1; Sun Tzu's spy chapter and Frankenstein's De Lacey cottage passages filled the
+  whole top-3.
+- A vague query ("how does the creature learn to speak?") matched Alice in Wonderland's
+  school scenes instead of Frankenstein — embeddings can't guess which book you meant.
+  This motivates the Phase 2 Content agent: it can rewrite queries with book context
+  before searching.
+- Meditations returned front-matter (editor's introduction, TOC) over the famous Book II
+  passage — a known noise source. Candidate fix if it bothers us later: skip front-matter
+  chunks at ingestion.
