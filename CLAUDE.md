@@ -16,7 +16,11 @@ letting me run it over doing everything silently. Small, reviewable steps.
    calling, agent-to-agent handoff, conversation state.
 2. **Azure** — resource hierarchy, Functions, Cosmos DB, Static Web Apps, Key Vault, App Insights.
    I've done AZ-900-level study; connect new concepts to AWS equivalents when helpful.
-3. **Terraform** — modules, state, plan/apply cycle, importing, destroying. I have a Terraform-on-Azure
+3. **Terraform — NON-NEGOTIABLE.** I must come out of this project genuinely able to use
+   Terraform on my own: modules, state, plan/apply cycle, importing, destroying. Method:
+   create *some* resources manually in the Azure portal first (so I see what the thing is),
+   then bring them under Terraform with `terraform import`; create others Terraform-first.
+   Both paths are the point — don't optimize the manual step away. I have a Terraform-on-Azure
    course in progress; reinforce it with real practice here.
 4. **GitHub workflow** — I want to *practice* this, not have it done for me:
    creating branches, opening PRs, reviewing diffs, merging, resolving conflicts, reading
@@ -25,6 +29,10 @@ letting me run it over doing everything silently. Small, reviewable steps.
 5. **Frontend ↔ backend connection** — how a frontend calls the API, CORS, environment config,
    what actually happens between browser and Azure Function.
 6. **End-to-end deployment** — from local code to a live URL via GitHub Actions.
+
+**Non-negotiable outcomes** (everything else supports these two):
+(a) I can genuinely use Terraform on my own afterwards;
+(b) I can design agentic architectures logically and implement them on Azure.
 
 ## Project goal
 
@@ -91,6 +99,9 @@ App Insights (traces) · Key Vault (secrets)
    then Orchestrator routing. FastAPI or Functions Core Tools for a local HTTP endpoint.
 3. **Terraform** — bootstrap tfstate storage (manual), then modules: resource-group, cosmos,
    function-app, key-vault, static-web-app, app-insights. Plan/apply with me watching.
+   Deliberate mix (learning goal #3): create at least one or two resources in the Azure
+   portal first, inspect them, then `terraform import` them; create the rest Terraform-first
+   so I experience both workflows.
 4. **Deploy backend** — implement `CosmosVectorStore`, migrate the index, deploy Functions via
    GitHub Actions.
 5. **Frontend + polish** — Static Web App, CORS config, App Insights traces, architecture diagram
