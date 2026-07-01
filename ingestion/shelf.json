@@ -1,0 +1,25 @@
+{
+  "description": "Curated shelf of public-domain books the Content agent can answer questions about. IDs are Project Gutenberg book IDs, verified via the Gutendex API.",
+  "books": [
+    { "id": 1342, "title": "Pride and Prejudice", "author": "Jane Austen" },
+    { "id": 84, "title": "Frankenstein", "author": "Mary Shelley" },
+    { "id": 345, "title": "Dracula", "author": "Bram Stoker" },
+    { "id": 1661, "title": "The Adventures of Sherlock Holmes", "author": "Arthur Conan Doyle" },
+    { "id": 11, "title": "Alice's Adventures in Wonderland", "author": "Lewis Carroll" },
+    { "id": 174, "title": "The Picture of Dorian Gray", "author": "Oscar Wilde" },
+    { "id": 2701, "title": "Moby Dick", "author": "Herman Melville" },
+    { "id": 98, "title": "A Tale of Two Cities", "author": "Charles Dickens" },
+    { "id": 76, "title": "Adventures of Huckleberry Finn", "author": "Mark Twain" },
+    { "id": 35, "title": "The Time Machine", "author": "H. G. Wells" },
+    { "id": 120, "title": "Treasure Island", "author": "Robert Louis Stevenson" },
+    { "id": 5200, "title": "Metamorphosis", "author": "Franz Kafka" },
+    { "id": 64317, "title": "The Great Gatsby", "author": "F. Scott Fitzgerald" },
+    { "id": 132, "title": "The Art of War", "author": "Sun Tzu" },
+    { "id": 2680, "title": "Meditations", "author": "Marcus Aurelius" },
+    { "id": 1232, "title": "The Prince", "author": "Niccolò Machiavelli" },
+    { "id": 205, "title": "Walden", "author": "Henry David Thoreau" },
+    { "id": 1228, "title": "On the Origin of Species", "author": "Charles Darwin" },
+    { "id": 20203, "title": "Autobiography of Benjamin Franklin", "author": "Benjamin Franklin" },
+    { "id": 23, "title": "Narrative of the Life of Frederick Douglass", "author": "Frederick Douglass" }
+  ]
+}
