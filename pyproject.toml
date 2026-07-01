@@ -1,0 +1,22 @@
+[project]
+name = "library-agent"
+version = "0.1.0"
+requires-python = ">=3.12"
+dependencies = [
+    "faiss-cpu>=1.14.3",
+    "requests>=2.34.2",
+    "sentence-transformers>=5.6.0",
+]
+
+[dependency-groups]
+dev = [
+    "ruff>=0.15.20",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py312"
+
+[tool.ruff.lint]
+# E/W: pycodestyle · F: pyflakes · I: import sorting · UP: modernize syntax · B: common bugs
+select = ["E", "W", "F", "I", "UP", "B"]
