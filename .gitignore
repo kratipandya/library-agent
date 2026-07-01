@@ -1,0 +1,16 @@
+# Secrets — never commit
+.env
+*.tfvars
+
+# Python
+.venv/
+__pycache__/
+.ruff_cache/
+*.egg-info/
+
+# Data artifacts (downloaded books, chunks, indexes — rebuildable, too big for git)
+data/
+*.faiss
+
+# macOS
+.DS_Store
