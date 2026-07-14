@@ -11,9 +11,10 @@ import asyncio
 import sys
 import time
 
-from llm import build_chat_service, get_model_id
 from semantic_kernel.connectors.ai.open_ai import OpenAIChatPromptExecutionSettings
 from semantic_kernel.contents import ChatHistory
+
+from agents.llm import build_chat_service, get_model_id
 
 MAX_ATTEMPTS = 4
 BACKOFF_BASE_SECONDS = 5

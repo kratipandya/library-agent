@@ -16,6 +16,15 @@ dev = [
     "ruff>=0.15.20",
 ]
 
+# Install the repo itself as an editable package so `agents` and `ingestion`
+# are importable from anywhere (agents import ingestion's VectorStore).
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["agents", "ingestion"]
+
 [tool.ruff]
 line-length = 100
 target-version = "py312"
