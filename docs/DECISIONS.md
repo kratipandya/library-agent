@@ -62,3 +62,30 @@ at all — per the "FAISS never leaks into cloud code paths" rule.
 - Meditations returned front-matter (editor's introduction, TOC) over the famous Book II
   passage — a known noise source. Candidate fix if it bothers us later: skip front-matter
   chunks at ingestion.
+
+## 004 — Phase 2 complete: multi-agent backend (2026-07-19)
+
+Five PRs (#8–#12): SK + OpenRouter plumbing, Content agent, Catalog agent, Orchestrator,
+FastAPI endpoint. The CLAUDE.md architecture now runs locally end-to-end.
+
+**Agents-as-tools over hand-rolled routing.** The Orchestrator is itself an SK
+`ChatCompletionAgent` whose tools are the two specialists (`ask_content_agent`,
+`ask_catalog_agent`). Chosen over an if/else intent classifier because the LLM can
+decompose compound questions ("who wrote X and how does it end?" → both agents), rewrite
+sub-questions to be self-contained (pronoun resolution from conversation context), and
+explain its routing. Trade-off accepted: 2–4 LLM calls per user message — noticeable on
+free-tier latency, fine for a portfolio demo.
+
+**Grounding rule in both specialists: never answer from memory.** The Content agent must
+cite retrieved chunks; the Catalog agent must call Open Library even for famous books.
+Each agent also *refuses* the other's domain — that refusal is what makes routing
+meaningful (and it's the seam App Insights will observe in Phase 5).
+
+**Rate limits: read the server's hint.** First smoke test hit an upstream-saturated free
+model; blind exponential backoff (5/10/20s) undershot the server's `retry_after_seconds: 29`.
+`invoke_with_retry` now parses the hint and honors it. Model swappable via
+`OPENROUTER_MODEL` env var — config, not code (paid off the same day it was written).
+
+**Conversation state = SK threads keyed by session_id**, in process memory. Deliberately
+dev-only; Phase 4 moves chat history to Cosmos DB. CORS is configured now so the Phase 5
+frontend doesn't hit the classic first-request wall.
