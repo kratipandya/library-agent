@@ -46,7 +46,9 @@ Design notes and honest retrieval-quality observations live in
 ## Status
 
 - [x] Phase 1 — Local RAG pipeline (Gutendex → chunk → embed → FAISS)
-- [ ] Phase 2 — Agents (Semantic Kernel + OpenRouter)
+- [x] Phase 2 — Agents (Semantic Kernel + OpenRouter): Content + Catalog agents,
+      agents-as-tools orchestrator, FastAPI `/chat` with per-session state.
+      Try it: `uv run uvicorn api.app:app --reload` → http://localhost:8000/docs
 - [ ] Phase 3 — Infrastructure (Terraform on Azure)
 - [ ] Phase 4 — Backend deployment (Functions + Cosmos DB + GitHub Actions)
 - [ ] Phase 5 — Frontend + observability
