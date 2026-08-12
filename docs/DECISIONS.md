@@ -123,3 +123,24 @@ Terraform: it doesn't just record state, it surfaces drift worth fixing.
 **`infra/bootstrap/` keeps local state on purpose.** It creates the very storage
 account other modules will use as a remote backend — using that backend for itself is
 circular. Applied rarely, `.tfstate` gitignored like any secret-adjacent file.
+
+## 006 — First Terraform-first module: resource-group (2026-08-12)
+
+**`infra/modules/resource-group/`** is our first reusable module (variables in →
+resource → outputs), called from **`infra/main/`** — the root config every future app
+resource (Cosmos, Function App, Key Vault, Static Web App, App Insights) will be added
+to, one resource type per PR. Unlike `infra/bootstrap/`, this one is Terraform-first:
+`library-agent-app-rg` was never clicked in the portal, only planned and applied.
+
+**Separate resource group from bootstrap's.** `library-agent-rg` (bootstrap) now holds
+only the tfstate storage account; `library-agent-app-rg` (this module) holds the actual
+application resources. Split deliberately: platform/state infra and workload infra
+change at different rates and have different blast radii — losing the tfstate storage
+account is a very different incident than losing the Cosmos DB instance.
+
+**`infra/main/` uses the remote backend bootstrap built**, confirmed two ways: `init`
+printed no local `terraform.tfstate` (state lives in the `tfstate` container instead),
+and after `apply`, `az storage blob list` showed a new `main.tfstate` blob in Azure.
+Also the first time we saw Terraform's state locking in action (`Acquiring/Releasing
+state lock` around the plan) — the remote backend's protection against two concurrent
+applies corrupting state, unavailable with local state files.
