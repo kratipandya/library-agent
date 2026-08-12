@@ -89,3 +89,37 @@ model; blind exponential backoff (5/10/20s) undershot the server's `retry_after_
 **Conversation state = SK threads keyed by session_id**, in process memory. Deliberately
 dev-only; Phase 4 moves chat history to Cosmos DB. CORS is configured now so the Phase 5
 frontend doesn't hit the classic first-request wall.
+
+## 005 — Terraform bootstrap: region policy and first import (2026-08-12)
+
+**Azure for Students has a subscription-level region allowlist**, discovered via
+`az policy assignment list`, not documented anywhere we'd have thought to look first:
+only `austriaeast`, `polandcentral`, `uaenorth`, `spaincentral`, `italynorth` accept new
+resources — West Europe (our original plan) is rejected outright. Nothing wrong with the
+subscription; it's a capacity-management policy Microsoft applies to student accounts.
+**Austria East** is now the project's region for all real resources.
+
+**The resource group's own region doesn't need to match.** `library-agent-rg` was created
+in West Europe (portal, before the policy was found) and stayed there — a resource
+group's location is deployment metadata, not a constraint on what it contains, so
+recreating it would have been destructive for zero benefit. Storage account and
+container are correctly in `austriaeast`.
+
+**Portal creation of the storage account was blocked by the same policy** with a
+generic UI error; `az storage account create --location austriaeast` succeeded
+immediately via CLI. Documented here because it's a real deviation from the
+portal-first plan (learning goal #3) — the manual-creation *intent* was honored (hand
+constructed, not Terraform-first), just via CLI instead of clicking, once the portal
+route dead-ended.
+
+**First `terraform import` × 3, then `plan`/`apply` did real work — not a no-op
+formality.** Resource group and container matched with zero drift. The storage account
+showed one real diff: `min_tls_version` was `TLS1_0` (the CLI's default when the flag
+is omitted) vs Terraform's schema default of `TLS1_2`. Made explicit in code rather than
+relying on either default, then `apply`d — the storage account is measurably more secure
+than how it was created, which is the honest point of bringing hand-made resources under
+Terraform: it doesn't just record state, it surfaces drift worth fixing.
+
+**`infra/bootstrap/` keeps local state on purpose.** It creates the very storage
+account other modules will use as a remote backend — using that backend for itself is
+circular. Applied rarely, `.tfstate` gitignored like any secret-adjacent file.

@@ -2,6 +2,13 @@
 .env
 *.tfvars
 
+# Terraform — state can contain resource IDs/secrets; plugins are per-machine
+**/.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+
 # Python
 .venv/
 __pycache__/
