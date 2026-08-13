@@ -174,3 +174,27 @@ Poland Central. Not a design preference, a capacity-availability fact.
 **Lesson for future applies:** an `apply` erroring doesn't guarantee nothing
 was created — check the actual resource in Azure (`az <service> show`)
 before assuming a clean slate to retry from.
+
+## 008 — Cosmos database and containers (2026-08-13)
+
+Added to `infra/modules/cosmos/`: one SQL database (`library`, shared
+throughput 400 RU/s) and three containers — `vectors`, `chat_history`,
+`metadata_cache` — matching the architecture in CLAUDE.md.
+
+**Shared database-level throughput, not per-container.** Each container
+requesting its own dedicated throughput would need its own 400 RU/s
+minimum — three containers would demand 1200 RU/s, past the account's
+1000 RU/s cap. Database-level shared throughput lets all three containers
+draw from one 400 RU/s pool instead, comfortably under the cap with room
+to grow.
+
+**Partition keys chosen to match how each container will actually be
+queried:** `vectors` on `/book_id` (the Content agent's book-filtered
+search), `chat_history` on `/session_id` (already how `api/app.py` keys
+sessions — a straight port when Phase 4 migrates off in-memory storage),
+`metadata_cache` on `/id` (a lookup cache, keyed by the item's own id).
+
+**Vector-search indexing policy intentionally deferred** — containers exist
+now, but the specifics (vector index type, embedding policy) are Phase 4's
+job, decided when `CosmosVectorStore` is actually written, not guessed at
+here. Applied cleanly with plan/apply cycle 4 (no incidents, unlike 007).
