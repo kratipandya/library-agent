@@ -198,3 +198,36 @@ sessions — a straight port when Phase 4 migrates off in-memory storage),
 now, but the specifics (vector index type, embedding policy) are Phase 4's
 job, decided when `CosmosVectorStore` is actually written, not guessed at
 here. Applied cleanly with plan/apply cycle 4 (no incidents, unlike 007).
+
+## 009 — Function App: Y1 blocked entirely, switched to Flex Consumption (2026-08-13)
+
+The classic `Y1` (Dynamic Consumption) Linux plan failed identically in
+**four** of our five allowed regions (`austriaeast`, `polandcentral`,
+`spaincentral`, `italynorth`): `"Requested features are not supported in
+region"`. Diagnosed with a direct `az rest` PUT against the ARM API for
+`Microsoft.Web/serverfarms` (the CLI's own `az functionapp plan create
+--sku` doesn't even accept `Y1` as a value, so that path was a dead end) —
+only **UAE North** accepted the Y1+Linux combination.
+
+UAE North then failed differently: `Current Limit (Y1 VMs): 0` — a genuine
+**subscription-level compute quota of zero**, not a feature gap. Azure for
+Students subscriptions default to 0 for several VM families, and this one
+(`Y1 VMs`) carries extra anti-abuse restriction history (past crypto-mining
+abuse), so a quota-increase request wasn't a reliable path.
+
+**Switched to Flex Consumption (`FC1`)** — Azure's current-generation
+serverless tier for Functions, a different Terraform resource entirely
+(`azurerm_function_app_flex_consumption`, not `azurerm_linux_function_app`),
+drawing from a separate quota pool. Applied cleanly in UAE North on the
+first attempt: `python 3.12`, `maximum_instance_count = 40` (an explicit
+cap on scale-out, same €0-safety philosophy as Cosmos's RU/s cap),
+`instance_memory_in_mb = 2048`, deployment package stored in a dedicated
+blob container (`app-package`) inside the function's own storage account.
+
+**Every real resource in this project now spans three regions**:
+`austriaeast` (resource group metadata, unaffected), `polandcentral`
+(Cosmos DB), `uaenorth` (Function App). Not a design preference — each
+placement is the direct result of a verified regional or quota constraint,
+documented here so a future "why is this here" doesn't require
+re-discovering it. Region choice per resource is decided by testing, not
+assumed.

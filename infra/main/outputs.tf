@@ -9,3 +9,7 @@ output "location" {
 output "cosmos_endpoint" {
   value = module.cosmos.endpoint
 }
+
+output "function_app_hostname" {
+  value = module.function_app.default_hostname
+}
