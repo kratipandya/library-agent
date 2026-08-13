@@ -144,3 +144,33 @@ and after `apply`, `az storage blob list` showed a new `main.tfstate` blob in Az
 Also the first time we saw Terraform's state locking in action (`Acquiring/Releasing
 state lock` around the plan) — the remote backend's protection against two concurrent
 applies corrupting state, unavailable with local state files.
+
+## 007 — Cosmos DB account: two real Azure snags (2026-08-13)
+
+`infra/modules/cosmos/` — the account only, free tier, capped at 1000 RU/s
+(`capacity.total_throughput_limit`), single region. Database + containers
+(vectors/chat-history/metadata-cache) follow in a separate PR. Two genuine
+infrastructure problems hit on the way, neither a code bug:
+
+**Resource providers weren't registered.** First apply failed with
+`MissingSubscriptionRegistration` for `Microsoft.DocumentDB` — new/student
+subscriptions only pre-register a handful of namespaces (Storage, Compute).
+Registered `Microsoft.DocumentDB`, `Microsoft.Web`, `Microsoft.KeyVault`,
+`Microsoft.Insights`, `Microsoft.OperationalInsights` up front (`az provider
+register`) so Function App / Key Vault / App Insights won't hit this later.
+
+**Austria East had no Cosmos DB capacity.** Second apply failed mid-creation
+with `ServiceUnavailable: high demand in this region`. Worse: the failed
+attempt left a broken `Failed`-state account registered on Azure (occupying
+the name) even though Terraform's state never recorded it — a genuine
+partial-failure gap between "Azure attempted the operation" and "Terraform
+knows about it." Fixed by deleting the orphaned account directly
+(`az cosmosdb delete`) and retrying in **Poland Central** instead — Cosmos
+DB capacity is apparently rationed more tightly per-region than compute/
+storage. `infra/main/main.tf` now has `cosmos_location` separate from
+`location`: everything else stays in Austria East, Cosmos alone is in
+Poland Central. Not a design preference, a capacity-availability fact.
+
+**Lesson for future applies:** an `apply` erroring doesn't guarantee nothing
+was created — check the actual resource in Azure (`az <service> show`)
+before assuming a clean slate to retry from.
