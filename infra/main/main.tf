@@ -22,8 +22,18 @@ terraform {
 }
 
 provider "azurerm" {
-  features {}
+  features {
+    key_vault {
+      # Learning project: let `destroy` fully clean up instead of leaving a
+      # soft-deleted vault that blocks reusing the name. See
+      # infra/modules/key-vault/main.tf for the matching resource-level choice.
+      purge_soft_delete_on_destroy    = true
+      recover_soft_deleted_key_vaults = true
+    }
+  }
 }
+
+data "azurerm_client_config" "current" {}
 
 locals {
   location = "austriaeast" # only region this subscription's policy allows — see infra/bootstrap/README.md
@@ -67,4 +77,24 @@ module "function_app" {
   tags = {
     project = "library-agent"
   }
+}
+
+module "key_vault" {
+  source              = "../modules/key-vault"
+  name                = "library-agent-kv"
+  resource_group_name = module.resource_group.name
+  location            = local.location
+  tenant_id           = data.azurerm_client_config.current.tenant_id
+  tags = {
+    project = "library-agent"
+  }
+}
+
+# Grants the identity running Terraform (Krati's own az login session)
+# rights to create/read/update secrets — so a secret can be set immediately
+# after this applies (az keyvault secret set), without a second PR.
+resource "azurerm_role_assignment" "key_vault_secrets_officer" {
+  scope                = module.key_vault.id
+  role_definition_name = "Key Vault Secrets Officer"
+  principal_id         = data.azurerm_client_config.current.object_id
 }

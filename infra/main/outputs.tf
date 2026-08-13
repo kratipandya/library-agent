@@ -13,3 +13,7 @@ output "cosmos_endpoint" {
 output "function_app_hostname" {
   value = module.function_app.default_hostname
 }
+
+output "key_vault_uri" {
+  value = module.key_vault.vault_uri
+}

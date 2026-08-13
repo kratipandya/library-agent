@@ -231,3 +231,33 @@ placement is the direct result of a verified regional or quota constraint,
 documented here so a future "why is this here" doesn't require
 re-discovering it. Region choice per resource is decided by testing, not
 assumed.
+
+## 010 — Key Vault (2026-08-13)
+
+`infra/modules/key-vault/` — an empty vault, no secrets in Terraform code
+or state. Applied cleanly in `austriaeast` on the first try (Key Vault is
+far more broadly available than the Function App consumption tiers were).
+
+**RBAC authorization, not legacy access policies** — the modern, currently
+recommended model; `rbac_authorization_enabled = true`, with a
+`azurerm_role_assignment` in the root config granting the identity running
+Terraform (Krati's own `az login` session, via `data
+azurerm_client_config.current`) the **Key Vault Secrets Officer** role.
+Access is granted by the *caller* of the module, not hardcoded inside it —
+keeps the module reusable if a different principal needs access later.
+
+**Secret values deliberately don't go through Terraform.** The OpenRouter
+key will be set operationally (`az keyvault secret set`, or the portal),
+not as a `.tf` resource — rotating a secret shouldn't require a `plan`/
+`apply`, and a value that flows through a `.tf` file risks eventually
+landing in a commit or a PR diff by accident, even gitignored. Terraform's
+job here stops at "the vault exists and I can access it."
+
+**`purge_protection_enabled = false`, paired with `purge_soft_delete_on_destroy
+= true` / `recover_soft_deleted_key_vaults = true` in the root provider's
+`features.key_vault` block.** A deliberate learning-project choice: Key
+Vaults soft-delete by default (can't be disabled) and without purge
+protection off, a `destroy` would leave a lingering soft-deleted vault
+blocking the name for up to 90 days. This setup lets `terraform destroy`
+fully clean up — important since practicing destroy is an explicit
+CLAUDE.md goal. Would flip to `true` for anything holding real secrets.
