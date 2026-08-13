@@ -31,6 +31,12 @@ locals {
   # a capacity issue specific to that region/service, not a config or policy problem.
   # Using a different allowed region for Cosmos only; everything else stays in austriaeast.
   cosmos_location = "polandcentral"
+  # Y1 (Linux Consumption) Function App plans failed with "Requested features
+  # are not supported in region" in austriaeast, polandcentral, spaincentral,
+  # AND italynorth — a real ARM-level probe (az rest PUT on serverfarms,
+  # bypassing the CLI's flawed --sku validation) confirmed uaenorth is the
+  # only one of our 5 allowed regions that actually supports Y1+Linux.
+  function_app_location = "uaenorth"
 }
 
 module "resource_group" {
@@ -47,6 +53,17 @@ module "cosmos" {
   name                = "library-agent-cosmos"
   resource_group_name = module.resource_group.name
   location            = local.cosmos_location
+  tags = {
+    project = "library-agent"
+  }
+}
+
+module "function_app" {
+  source               = "../modules/function-app"
+  name                 = "library-agent-func"
+  storage_account_name = "libraryagentfuncsa"
+  resource_group_name  = module.resource_group.name
+  location             = local.function_app_location
   tags = {
     project = "library-agent"
   }
