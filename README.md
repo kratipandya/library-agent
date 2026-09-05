@@ -49,9 +49,11 @@ Design notes and honest retrieval-quality observations live in
 - [x] Phase 2 — Agents (Semantic Kernel + OpenRouter): Content + Catalog agents,
       agents-as-tools orchestrator, FastAPI `/chat` with per-session state.
       Try it: `uv run uvicorn api.app:app --reload` → http://localhost:8000/docs
-- [ ] Phase 3 — Terraform (in progress): bootstrap remote-state storage done
-      (`infra/bootstrap/`, imported from hand-created resources — see
-      `docs/DECISIONS.md` 005). Next: resource-group/cosmos/function-app/etc. modules.
-- [ ] Phase 3 — Infrastructure (Terraform on Azure)
-- [ ] Phase 4 — Backend deployment (Functions + Cosmos DB + GitHub Actions)
-- [ ] Phase 5 — Frontend + observability
+- [x] Phase 3 — Terraform (Azure infra): resource group, Cosmos DB, Function
+      App (Flex Consumption), Key Vault, App Insights — six modules, all
+      Terraform-first except `infra/bootstrap/`'s portal/CLI-then-imported
+      resources (see `docs/DECISIONS.md` 005–012). Static Web App deferred
+      to Phase 5 (regional deadlock — see 011).
+- [ ] Phase 4 — Backend deployment (code onto the Function App via GitHub Actions,
+      migrate FAISS → Cosmos)
+- [ ] Phase 5 — Frontend (Static Web App) + observability

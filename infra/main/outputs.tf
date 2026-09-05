@@ -17,3 +17,8 @@ output "function_app_hostname" {
 output "key_vault_uri" {
   value = module.key_vault.vault_uri
 }
+
+output "app_insights_connection_string" {
+  value     = module.app_insights.connection_string
+  sensitive = true
+}

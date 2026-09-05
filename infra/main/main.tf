@@ -98,3 +98,13 @@ resource "azurerm_role_assignment" "key_vault_secrets_officer" {
   role_definition_name = "Key Vault Secrets Officer"
   principal_id         = data.azurerm_client_config.current.object_id
 }
+
+module "app_insights" {
+  source              = "../modules/app-insights"
+  name                = "library-agent-insights"
+  resource_group_name = module.resource_group.name
+  location            = local.location
+  tags = {
+    project = "library-agent"
+  }
+}
