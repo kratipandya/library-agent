@@ -261,3 +261,60 @@ protection off, a `destroy` would leave a lingering soft-deleted vault
 blocking the name for up to 90 days. This setup lets `terraform destroy`
 fully clean up — important since practicing destroy is an explicit
 CLAUDE.md goal. Would flip to `true` for anything holding real secrets.
+
+## 011 — Static Web App deferred: a genuine regional deadlock (2026-08-13)
+
+Static Web Apps can only be created in 5 fixed global regions —
+`centralus, eastus2, westus2, westeurope, eastasia` — confirmed via direct
+ARM probe (`LocationNotAvailableForResourceType`, not just the general
+capability list, after this session's earlier lesson that general lists
+can be misleadingly permissive). This subscription's region-allowlist
+policy permits a completely different 5: `austriaeast, polandcentral,
+uaenorth, spaincentral, italynorth`. **Zero overlap** — unlike Cosmos DB
+or the Function App, there is no region within our allowed set to fall
+back to; this can't be resolved by trying alternatives.
+
+The policy itself (`sys.regionrestriction`) is Azure-platform-managed, not
+something we authored — the `sys.` prefix and lack of an `identity` block
+indicate it's a capacity/anti-abuse control tied to the Azure for Students
+offer, not a customer Azure Policy assignment we can edit or delete
+ourselves. The origin error message's own text ("contact support") is the
+real path, not a portal setting.
+
+**Decision: defer Static Web App to Phase 5**, where it belongs anyway per
+CLAUDE.md's own build order ("Frontend + polish") — we were building it
+now only because it was next in the module list, not because anything
+needs it yet. Optionally, an Azure Support request for a Static-Web-App-
+capable region can be filed in the meantime so it's resolved by the time
+Phase 5 starts. Phase 3 otherwise complete after App Insights (module 6 of
+what CLAUDE.md originally listed as 6 — Static Web App becomes Phase 5's
+first module instead of Phase 3's last).
+
+## 012 — App Insights: the last Phase 3 module (2026-08-30)
+
+`infra/modules/app-insights/` — workspace-based Application Insights (the
+modern shape; standalone "classic" App Insights is being phased out by
+Microsoft). A Log Analytics Workspace underneath is where telemetry
+actually lands; App Insights is the query/UX layer on top, linked via
+`workspace_id`.
+
+**Explicit ingestion caps on both layers** — `daily_quota_gb = 1` on the
+workspace, `daily_data_cap_in_gb = 1` on App Insights — rather than
+trusting the defaults (workspace defaults to unlimited; App Insights
+defaults to 100 GB/day). Same €0-safety pattern as Cosmos's RU/s cap and
+the Function App's instance-count cap: comfortably under Azure Monitor's
+5 GB/month free grant even at sustained daily volume, so a bug that logs
+too aggressively can't quietly generate a bill.
+
+Checked region availability up front this time (both resource types
+confirmed available in all 5 allowed regions via direct ARM query) rather
+than discovering a gap through a failed apply — applied cleanly in
+`austriaeast` on the first attempt, no incidents.
+
+**Phase 3 is now complete**: bootstrap, resource-group, Cosmos DB
+(account + database + containers), Function App, Key Vault, App Insights
+— six modules, all Terraform-first except bootstrap's three
+portal/CLI-then-imported resources. Static Web App is Phase 5's problem
+now (see 011). Next real milestone is Phase 4: deploying actual code
+(`agents/`, `api/`, `ingestion/`) onto the Function App that's sat empty
+since PR #18.
